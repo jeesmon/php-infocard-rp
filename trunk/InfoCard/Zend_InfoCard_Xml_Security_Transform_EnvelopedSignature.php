@@ -41,13 +41,15 @@ class Zend_InfoCard_Xml_Security_Transform_EnvelopedSignature
     public function transform($strXMLData)
     {
         $sxe = simplexml_load_string($strXMLData);
+	$sxe->registerXPathNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
 
-        if(!$sxe->Signature) {
+	list($signature) = $sxe->xpath("//ds:Signature");
+        if(!isset($signature)) {
             throw new Exception("Unable to locate Signature Block for EnvelopedSignature Transform");
         }
 
-        unset($sxe->Signature);
+        $transformed_xml = str_replace($signature->asXML(), "", $sxe->asXML());
 
-        return $sxe->asXML();
+        return $transformed_xml;
     }
 }
