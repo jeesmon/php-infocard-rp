@@ -94,25 +94,30 @@ class Zend_InfoCard_Xml_Security
 
         $sxe = simplexml_load_string($strXMLInput);
 
-        switch((string)$sxe->Signature->SignedInfo->CanonicalizationMethod['Algorithm']) {
+	$sxe->registerXPathNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
+
+        list($canonMethod) = $sxe->xpath("//ds:Signature/ds:SignedInfo/ds:CanonicalizationMethod");
+        switch((string)$canonMethod['Algorithm']) {
             case self::CANONICAL_METHOD_C14N_EXC:
-                $cMethod = (string)$sxe->Signature->SignedInfo->CanonicalizationMethod['Algorithm'];
+                $cMethod = (string)$canonMethod['Algorithm'];
                 break;
             default:
                 throw new Exception("Unknown or unsupported CanonicalizationMethod Requested");
         }
 
-        switch((string)$sxe->Signature->SignedInfo->SignatureMethod['Algorithm']) {
+        list($signatureMethod) = $sxe->xpath("//ds:Signature/ds:SignedInfo/ds:SignatureMethod");
+        switch((string)$signatureMethod['Algorithm']) {
             case self::SIGNATURE_METHOD_SHA1:
-                $sMethod = (string)$sxe->Signature->SignedInfo->SignatureMethod['Algorithm'];
+                $sMethod = (string)$signatureMethod['Algorithm'];
                 break;
             default:
                 throw new Exception("Unknown or unsupported SignatureMethod Requested");
         }
 
-        switch((string)$sxe->Signature->SignedInfo->Reference->DigestMethod['Algorithm']) {
+        list($digestMethod) = $sxe->xpath("//ds:Signature/ds:SignedInfo/ds:Reference/ds:DigestMethod");
+        switch((string)$digestMethod['Algorithm']) {
             case self::DIGEST_METHOD_SHA1:
-                $dMethod = (string)$sxe->Signature->SignedInfo->Reference->DigestMethod['Algorithm'];
+                $dMethod = (string)$digestMethod['Algorithm'];
                 break;
             default:
                 throw new Exception("Unknown or unsupported DigestMethod Requested");
@@ -120,22 +125,26 @@ class Zend_InfoCard_Xml_Security
 
         $base64DecodeSupportsStrictParam = version_compare(PHP_VERSION, '5.2.0', '>=');
 
+        list($digestValue) = $sxe->xpath("//ds:Signature/ds:SignedInfo/ds:Reference/ds:DigestValue");
         if ($base64DecodeSupportsStrictParam) {
-            $dValue = base64_decode((string)$sxe->Signature->SignedInfo->Reference->DigestValue, true);
+            $dValue = base64_decode((string)$digestValue, true);
         } else {
-            $dValue = base64_decode((string)$sxe->Signature->SignedInfo->Reference->DigestValue);
+            $dValue = base64_decode((string)$digestValue);
         }
 
+        list($signatureValueElem) = $sxe->xpath("//ds:Signature/ds:SignatureValue");
         if ($base64DecodeSupportsStrictParam) {
-            $signatureValue = base64_decode((string)$sxe->Signature->SignatureValue, true);
+            $signatureValue = base64_decode((string)$signatureValueElem, true);
         } else {
-            $signatureValue = base64_decode((string)$sxe->Signature->SignatureValue);
+            $signatureValue = base64_decode((string)$signatureValueElem);
         }
 
         $transformer = new Zend_InfoCard_Xml_Security_Transform();
 
-        foreach($sxe->Signature->SignedInfo->Reference->Transforms->children() as $transform) {
-            $transformer->addTransform((string)$transform['Algorithm']);
+	//need to fix this later
+        $transforms = $sxe->xpath("//ds:Signature/ds:SignedInfo/ds:Reference/ds:Transforms/ds:Transform");
+        while(list( , $transform) = each($transforms)) {
+          $transformer->addTransform((string)$transform['Algorithm']);
         }
 
         $transformed_xml = $transformer->applyTransforms($strXMLInput);
@@ -195,17 +204,27 @@ class Zend_InfoCard_Xml_Security
         }
 
         $transformer = new Zend_InfoCard_Xml_Security_Transform();
-        $transformer->addTransform((string)$sxe->Signature->SignedInfo->CanonicalizationMethod['Algorithm']);
+        $transformer->addTransform((string)$canonMethod['Algorithm']);
 
         // The way we are doing our XML processing requires that we specifically add this
         // (even though it's in the <Signature> parent-block).. otherwise, our canonical form
         // fails signature verification
-        $sxe->Signature->SignedInfo->addAttribute('xmlns', 'http://www.w3.org/2000/09/xmldsig#');
+        list($signedInfo) = $sxe->xpath("//ds:Signature/ds:SignedInfo");
+        $signedInfo->addAttribute('DS_NS', 'http://www.w3.org/2000/09/xmldsig#');
+	$signedInfoXML = $signedInfo->asXML(); 
 
-        $canonical_signedinfo = $transformer->applyTransforms($sxe->Signature->SignedInfo->asXML());
+        if(preg_match("/<\w+\:\w+/", $signedInfoXML)) {
+          $signedInfoXML = str_replace("DS_NS", "xmlns:ds", $signedInfoXML);
+        }
+        else {
+          $signedInfoXML = str_replace("DS_NS", "xmlns", $signedInfoXML);
+        }
 
-        if(@openssl_verify($canonical_signedinfo, $signatureValue, $public_key)) {
-            return (string)$sxe->Signature->SignedInfo->Reference['URI'];
+        $canonical_signedinfo = $transformer->applyTransforms($signedInfoXML);
+
+        if(openssl_verify($canonical_signedinfo, $signatureValue, $public_key)) {
+	    list($reference) = $sxe->xpath("//ds:Signature/ds:SignedInfo/ds:Reference");
+            return (string)$reference['URI'];
         }
 
         return false;
