@@ -1,0 +1,7 @@
+==Installation Instructions==
+
+ * Unzip/copy files to document root
+
+ * Open index.php and edit locations of SSL private key and public key files
+
+ * Edit < object > tag to add/remove/update required and optional claims
