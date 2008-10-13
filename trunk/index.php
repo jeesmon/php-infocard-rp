@@ -22,7 +22,7 @@ if (isset($_POST['xmlToken'])) {
 ?>
 
 <form method='post' id='infocard'>
-  <object type="application/x-informationcard" name="xmlToken">
+  <object type="application/x-informationCard" name="xmlToken">
     <param name="requiredClaims" value="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/privatepersonalidentifier http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" />
     <param name="privacyVersion" value="1"/>
     <param name="tokenType" value="urn:oasis:names:tc:SAML:1.0:assertion"/>
