@@ -1,4 +1,4 @@
-==Installation Instructions==
+==Steps==
 
  * Unzip/copy files to webserver document root (eg: Apache2 with PHP)
 
