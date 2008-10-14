@@ -207,7 +207,7 @@ class Zend_InfoCard_Xml_Security
         $transformer->addTransform((string)$canonMethod['Algorithm']);
 
         list($signedInfo) = $sxe->xpath("//ds:Signature/ds:SignedInfo");
-	$signedInfoXML = self::addNamespace($signedInfo); 
+	$signedInfoXML = self::addNamespace($signedInfo, "http://www.w3.org/2000/09/xmldsig#"); 
 
         $canonical_signedinfo = $transformer->applyTransforms($signedInfoXML);
 
@@ -219,8 +219,8 @@ class Zend_InfoCard_Xml_Security
         return false;
     }
 
-    private function addNamespace($xmlElem) {
-        $xmlElem->addAttribute('DS_NS', 'http://www.w3.org/2000/09/xmldsig#');
+    private function addNamespace($xmlElem, $ns) {
+        $xmlElem->addAttribute('DS_NS', $ns);
         $xml = $xmlElem->asXML();
         if(preg_match("/<(\w+)\:\w+/", $xml, $matches)) {
           $prefix = $matches[1];
