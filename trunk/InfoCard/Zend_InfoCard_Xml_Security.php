@@ -206,19 +206,8 @@ class Zend_InfoCard_Xml_Security
         $transformer = new Zend_InfoCard_Xml_Security_Transform();
         $transformer->addTransform((string)$canonMethod['Algorithm']);
 
-        // The way we are doing our XML processing requires that we specifically add this
-        // (even though it's in the <Signature> parent-block).. otherwise, our canonical form
-        // fails signature verification
         list($signedInfo) = $sxe->xpath("//ds:Signature/ds:SignedInfo");
-        $signedInfo->addAttribute('DS_NS', 'http://www.w3.org/2000/09/xmldsig#');
-	$signedInfoXML = $signedInfo->asXML(); 
-
-        if(preg_match("/<\w+\:\w+/", $signedInfoXML)) {
-          $signedInfoXML = str_replace("DS_NS", "xmlns:ds", $signedInfoXML);
-        }
-        else {
-          $signedInfoXML = str_replace("DS_NS", "xmlns", $signedInfoXML);
-        }
+	$signedInfoXML = self::addNamespace($signedInfo); 
 
         $canonical_signedinfo = $transformer->applyTransforms($signedInfoXML);
 
@@ -228,6 +217,20 @@ class Zend_InfoCard_Xml_Security
         }
 
         return false;
+    }
+
+    private function addNamespace($xmlElem) {
+        $xmlElem->addAttribute('DS_NS', 'http://www.w3.org/2000/09/xmldsig#');
+        $xml = $xmlElem->asXML();
+        if(preg_match("/<(\w+)\:\w+/", $xml, $matches)) {
+          $prefix = $matches[1];
+          $xml = str_replace("DS_NS", "xmlns:" . $prefix, $xml);
+        }
+        else {
+          $xml = str_replace("DS_NS", "xmlns", $xml);
+        }
+
+        return $xml;
     }
 
     /**
