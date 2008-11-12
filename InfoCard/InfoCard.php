@@ -65,6 +65,15 @@ class InfoCard
   }
 
   public function process($xmlToken) {
+    if(strpos($xmlToken, "EncryptedData") === false ) {
+      return self::processUnSecureToken($xmlToken);
+    }
+    else {
+      return self::processSecureToken($xmlToken);
+    }
+  }
+
+  private function processSecureToken($xmlToken) {
     $retval = new Zend_InfoCard_Claims();
 
     try {
@@ -94,6 +103,21 @@ class InfoCard
       $retval->setError($e->getMessage());
       $retval->setCode(Zend_InfoCard_Claims::RESULT_VALIDATION_FAILURE);
       return $retval;
+    }
+
+    return self::getClaims($retval, $assertions);
+  }
+
+  private function processUnsecureToken($xmlToken) {
+    $retval = new Zend_InfoCard_Claims();
+    
+    try {
+      $assertions = self::getAssertions($xmlToken);    
+    }
+    catch(Exception $e) {
+       $retval->setError('Failure processing assertion document');
+       $retval->setCode(Zend_InfoCard_Claims::RESULT_PROCESSING_FAILURE);
+       return $retval;
     }
 
     return self::getClaims($retval, $assertions);
