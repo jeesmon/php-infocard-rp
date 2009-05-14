@@ -162,6 +162,9 @@ class InfoCard
 
   private function getAssertions($strXmlData) {
      $sxe = simplexml_load_string($strXmlData);
+     if($sxe === FALSE)
+       throw new Exception("Unable to determine Assertion type by Namespace");
+
      $namespaces = $sxe->getDocNameSpaces();
      foreach($namespaces as $namespace) {
        switch($namespace) {
