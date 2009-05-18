@@ -158,11 +158,20 @@ class Zend_InfoCard_Xml_Security
         $public_key = null;
 
 	$sxe->registerXPathNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
-	list($keyValue) = $sxe->xpath("ds:Signature/ds:KeyInfo/ds:KeyValue");
-
-	$keyValue->registerXPathNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
-        list($x509cert) = $keyValue->xpath("ds:X509Certificate");
-        list($rsaKeyValue) = $keyValue->xpath("ds:RSAKeyValue");
+	list($x509Data) = $sxe->xpath("ds:Signature/ds:KeyInfo/ds:X509Data");
+        list($keyValue) = $sxe->xpath("ds:Signature/ds:KeyInfo/ds:KeyValue");
+          
+        if(isset($x509Data))
+        { 
+          $x509Data->registerXPathNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
+          list($x509cert) = $x509Data->xpath("ds:X509Certificate");
+        }
+        
+        if(isset($keyValue))
+        { 
+          $keyValue->registerXPathNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
+          list($rsaKeyValue) = $keyValue->xpath("ds:RSAKeyValue");
+        }
 
         switch(true) {
             case isset($x509cert):
@@ -220,15 +229,15 @@ class Zend_InfoCard_Xml_Security
     }
 
     private function addNamespace($xmlElem, $ns) {
-        $xml = $xmlElem->asXML();
-
-        foreach($xmlElem->getNamespaces() as $xns) {
+	$xe = simplexml_load_string($xmlElem->asXML());
+        foreach($xe->getNamespaces() as $xns) {
           if($xns == $ns) {
-            return $xml;
+            return $xmlElem->asXML();
           }
         }
 
         $xmlElem->addAttribute('DS_NS', $ns);
+	$xml = $xmlElem->asXML();
         if(preg_match("/<(\w+)\:\w+/", $xml, $matches)) {
           $prefix = $matches[1];
           $xml = str_replace("DS_NS", "xmlns:" . $prefix, $xml);
