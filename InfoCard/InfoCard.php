@@ -169,6 +169,7 @@ class InfoCard
      foreach($namespaces as $namespace) {
        switch($namespace) {
          case self::SAML_ASSERTION_1_0_NS:
+         case self::SAML_ASSERTION_1_1_NS:
            include_once 'InfoCard/Zend_InfoCard_Xml_Assertion_Saml.php';
            return simplexml_load_string($strXmlData, 'Zend_InfoCard_Xml_Assertion_Saml', null);
        }
