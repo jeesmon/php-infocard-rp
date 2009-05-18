@@ -220,8 +220,15 @@ class Zend_InfoCard_Xml_Security
     }
 
     private function addNamespace($xmlElem, $ns) {
-        $xmlElem->addAttribute('DS_NS', $ns);
         $xml = $xmlElem->asXML();
+
+        foreach($xmlElem->getNamespaces() as $xns) {
+          if($xns == $ns) {
+            return $xml;
+          }
+        }
+
+        $xmlElem->addAttribute('DS_NS', $ns);
         if(preg_match("/<(\w+)\:\w+/", $xml, $matches)) {
           $prefix = $matches[1];
           $xml = str_replace("DS_NS", "xmlns:" . $prefix, $xml);
