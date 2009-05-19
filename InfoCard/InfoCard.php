@@ -180,7 +180,8 @@ class InfoCard
 
   private function decryptToken($xmlToken) {
     if($this->_sxml['Type'] != self::XENC_ELEMENT_TYPE) {
-      throw new Exception("Unknown EncryptedData type found");
+      //Not always found, even in token generated from CardSpace with certificate credential
+      //throw new Exception("Unknown EncryptedData type found");
     }
 
     $this->_sxml->registerXPathNamespace('enc', self::XENC_NS);  
@@ -238,22 +239,20 @@ class InfoCard
     $encryptedKey->registerXPathNamespace('ds', self::DSIG_NS);
     $encryptedKey->registerXPathNamespace('wsse', self::WSSE_NS);
     list($keyIdentifier) = $encryptedKey->xpath("ds:KeyInfo/wsse:SecurityTokenReference/wsse:KeyIdentifier");
-    if(!$keyIdentifier instanceof SimpleXMLElement) {
-      throw new Exception("KeyInfo/SecurityTokenReference/KeyIdentifier node not found in KeyInfo");
-    }
+    if($keyIdentifier instanceof SimpleXMLElement) {
+      $keyIdDom =  dom_import_simplexml($keyIdentifier);
+      if(!$keyIdDom instanceof DOMElement) {
+        throw new Exception("Failed to create DOM from KeyIdentifier node");
+      }
 
-    $keyIdDom =  dom_import_simplexml($keyIdentifier);
-    if(!$keyIdDom instanceof DOMElement) {
-      throw new Exception("Failed to create DOM from KeyIdentifier node");
-    }
+      if(!$keyIdDom->hasAttribute("ValueType")) {
+        throw new Exception("Unable to determine ValueType of KeyIdentifier");
+      }
 
-    if(!$keyIdDom->hasAttribute("ValueType")) {
-      throw new Exception("Unable to determine ValueType of KeyIdentifier");
-    }
-
-    $valueType = $keyIdDom->getAttribute("ValueType");
-    if($valueType != self::WSSE_KEYID_VALUE_TYPE) {
-      throw new Exception("Unsupported KeyIdentifier ValueType");
+      $valueType = $keyIdDom->getAttribute("ValueType");
+      if($valueType != self::WSSE_KEYID_VALUE_TYPE) {
+        throw new Exception("Unsupported KeyIdentifier ValueType");
+      }
     }
 
     list($cipherValue) = $encryptedKey->xpath("enc:CipherData/enc:CipherValue");

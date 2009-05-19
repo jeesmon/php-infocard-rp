@@ -229,7 +229,8 @@ class Zend_InfoCard_Xml_Security
     }
 
     private function addNamespace($xmlElem, $ns) {
-	$xe = simplexml_load_string($xmlElem->asXML());
+	//warning expected
+	$xe = simplexml_load_string(($xmlElem->asXML()), "SimpleXMLElement", LIBXML_NOERROR | LIBXML_NOWARNING);
         foreach($xe->getNamespaces() as $xns) {
           if($xns == $ns) {
             return $xmlElem->asXML();
