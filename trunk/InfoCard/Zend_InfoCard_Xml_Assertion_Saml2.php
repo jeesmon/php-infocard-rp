@@ -37,7 +37,7 @@ class Zend_InfoCard_Xml_Assertion_Saml2 extends SimpleXMLElement
     /**
      * Audience Restriction Condition
      */
-    const CONDITION_AUDIENCE = 'AudienceRestrictionCondition';
+    const CONDITION_AUDIENCE = 'AudienceRestriction';
 
     /**
      * The URI for a 'bearer' confirmation
@@ -73,7 +73,7 @@ class Zend_InfoCard_Xml_Assertion_Saml2 extends SimpleXMLElement
 
             foreach($conditions as $condition => $conditionValue) {
                 switch(strtolower($condition)) {
-                    case 'audiencerestrictioncondition':
+                    case 'audiencerestriction':
 
                         $serverName = $this->_getServerName();
                         $serverPort = $this->_getServerPort();
@@ -162,7 +162,7 @@ class Zend_InfoCard_Xml_Assertion_Saml2 extends SimpleXMLElement
      */
     public function getAssertionID()
     {
-        return (string)$this['AssertionID'];
+        return (string)$this['ID'];
     }
 
     /**
@@ -246,8 +246,8 @@ class Zend_InfoCard_Xml_Assertion_Saml2 extends SimpleXMLElement
     public function getConfirmationMethod()
     {
 	$this->registerXPathNamespace('saml', self::SAML_ASSERTION_2_0_NS);
-        list($confirmation) = $this->xPath("//saml:ConfirmationMethod");
-        return (string)$confirmation;
+        list($confirmation) = $this->xPath("//saml:SubjectConfirmation");
+        return (string)$confirmation['Method'];
     }
 
     /**
