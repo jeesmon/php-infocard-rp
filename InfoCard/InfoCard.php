@@ -26,6 +26,7 @@ class InfoCard
 
   const SAML_ASSERTION_1_0_NS = "urn:oasis:names:tc:SAML:1.0:assertion";
   const SAML_ASSERTION_1_1_NS = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1";
+  const SAML_ASSERTION_2_0_NS = "urn:oasis:names:tc:SAML:2.0:assertion";
 
   protected $_private_key_file;
   protected $_public_key_file;
@@ -81,7 +82,7 @@ class InfoCard
       $decryptedToken = self::decryptToken($xmlToken);
     }
     catch(Exception $e) {
-      $retval->setError('Failed to extract assertion document');
+      $retval->setError('Failed to extract assertion document:' . $e->getMessage());
       $retval->setCode(Zend_InfoCard_Claims::RESULT_PROCESSING_FAILURE);
       return $retval;
     }
@@ -90,7 +91,7 @@ class InfoCard
       $assertions = self::getAssertions($decryptedToken);    
     }
     catch(Exception $e) {
-       $retval->setError('Failure processing assertion document');
+       $retval->setError('Failure processing assertion document' . $e->getMessage());
        $retval->setCode(Zend_InfoCard_Claims::RESULT_PROCESSING_FAILURE);
        return $retval;
     }
@@ -115,7 +116,7 @@ class InfoCard
       $assertions = self::getAssertions($xmlToken);    
     }
     catch(Exception $e) {
-       $retval->setError('Failure processing assertion document');
+       $retval->setError('Failure processing assertion document' . $e->getMessage());
        $retval->setCode(Zend_InfoCard_Claims::RESULT_PROCESSING_FAILURE);
        return $retval;
     }
@@ -172,6 +173,9 @@ class InfoCard
          case self::SAML_ASSERTION_1_1_NS:
            include_once 'InfoCard/Zend_InfoCard_Xml_Assertion_Saml.php';
            return simplexml_load_string($strXmlData, 'Zend_InfoCard_Xml_Assertion_Saml', null);
+         case self::SAML_ASSERTION_2_0_NS:
+           include_once 'InfoCard/Zend_InfoCard_Xml_Assertion_Saml2.php';
+           return simplexml_load_string($strXmlData, 'Zend_InfoCard_Xml_Assertion_Saml2', null);
        }
      }
 
