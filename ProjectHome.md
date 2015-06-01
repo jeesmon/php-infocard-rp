@@ -1,0 +1,5 @@
+PHP library for Relying Party to consume Information Card token.
+
+Requirement: PHP5 with php5-mcrypt and php5-openssl extensions enabled
+
+This project uses some classes included in [Zend InfoCard component](http://framework.zend.com/download/infocard) with some modifications. The motivation of this project is the [issue](http://framework.zend.com/issues/browse/ZF-3821) that prohibits RPs to consume Information Card tokens from Identity Selectors other than CardSpace ([DigitalMe](http://www.digitalme.com), [Azigo](http://www.azigo.com), etc.) using Zend InfoCard component. This project will be obsolete when authors of Zend InfoCard component fixes issues in supporting token from other Identity Selectors that follow [Identity Selector Interoperability Profile specification](http://www.microsoft.com/downloads/details.aspx?FamilyID=b94817fc-3991-4dd0-8e85-b73e626f6764&DisplayLang=en)
